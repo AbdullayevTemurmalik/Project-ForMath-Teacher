@@ -163,6 +163,13 @@ export function TeacherDashboard({
     setModalConfig((p) => ({ ...p, isOpen: false }));
   }, []);
 
+  interface StudentManagementProps {
+    subject: string;
+    students: Student[];
+    setStudents: React.Dispatch<React.SetStateAction<Student[]>>;
+    onDeleteStudent: (student: Student) => void;
+  }
+
   const openDeleteStudentModal = useCallback(
     (student: Student) => {
       setModalConfig({
