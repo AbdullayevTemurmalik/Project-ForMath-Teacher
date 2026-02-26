@@ -286,14 +286,14 @@ export function TeacherDashboard({
           />
         )}
 
-        {currentView === "students" && (
+        {/* {currentView === "students" && (
           <StudentManagement
             subject={currentSubject}
             students={students}
             setStudents={setStudents}
             // onDeleteStudent={openDeleteStudentModal}
           />
-        )}
+        )} */}
 
         {currentView === "payments" && (
           <PaymentHistory
