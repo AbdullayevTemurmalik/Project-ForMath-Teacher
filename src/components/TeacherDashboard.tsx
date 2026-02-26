@@ -292,7 +292,6 @@ export function TeacherDashboard({
             subject={currentSubject}
             students={students}
             setStudents={setStudents}
-            onDeleteRequest={openDeleteStudentModal}
           />
         )}
         {currentView === "payments" && (
@@ -300,7 +299,6 @@ export function TeacherDashboard({
             subject={currentSubject}
             students={students}
             onDeletePaymentRequest={openDeletePaymentModal}
-            setStudents={setStudents}
           />
         )}
         {currentView === "schedule" && <Schedule subject={currentSubject} />}
