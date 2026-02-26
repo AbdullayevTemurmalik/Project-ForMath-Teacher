@@ -1,1 +1,1 @@
-Bu Fayl
+Bu Fayl Code lari bilan Sizlar
