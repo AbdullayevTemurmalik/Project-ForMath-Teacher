@@ -250,8 +250,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             </button>
           </form>
 
-          {/* Demo kirish haqidagi qism olib tashlandi */}
-
           <div className="mt-4 text-center">
             <button
               type="button"

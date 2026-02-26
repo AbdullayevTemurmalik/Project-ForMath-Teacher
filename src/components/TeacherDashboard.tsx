@@ -284,7 +284,7 @@ export function TeacherDashboard({
             subject={currentSubject}
             students={students}
             setStudents={setStudents}
-            onDeleteStudent={openDeleteStudentModal}
+            // onDeleteStudent={openDeleteStudentModal}
           />
         )}
 
@@ -292,7 +292,7 @@ export function TeacherDashboard({
           <PaymentHistory
             subject={currentSubject}
             students={students}
-            onDeletePaymentRequest={openDeletePaymentModal}
+            // onDeletePaymentRequest={() => openDeletePaymentModal}
           />
         )}
 
