@@ -1,1 +1,1 @@
-Bu Fayl Code lari bilan Sizlar
+Bu Fayl Code lari bilan Sizlar Oz oquvchilaringizni 
