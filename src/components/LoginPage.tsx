@@ -1,60 +1,77 @@
-import { useState } from 'react';
-import { LogIn, UserPlus } from 'lucide-react';
+import { useState } from "react";
+import { LogIn } from "lucide-react";
 
 interface LoginPageProps {
-  onLogin: (email: string, password: string, name?: string, subject?: string) => void;
+  onLogin: (
+    email: string,
+    password: string,
+    name?: string,
+    subject?: string,
+  ) => void;
 }
 
 export function LoginPage({ onLogin }: LoginPageProps) {
   const [isRegistering, setIsRegistering] = useState(false);
-  
+
   // Login fields
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   // Registration fields
-  const [regName, setRegName] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regConfirmPassword, setRegConfirmPassword] = useState('');
-  const [regSubject, setRegSubject] = useState('');
-  
-  const [error, setError] = useState('');
+  const [regName, setRegName] = useState("");
+  const [regPhone, setRegPhone] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+  const [regSubject, setRegSubject] = useState("");
+
+  const [error, setError] = useState("");
+
+  // Ruxsat berilgan foydalanuvchilar ro'yxati
+  const allowedUsers = [
+    { email: "tmaq77@gmail.com", password: "temurbek" },
+    { email: "Elyorbek@gmail.com", password: "Elyorbek1234" },
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (isRegistering) {
-      if (!regName || !regPhone || !regEmail || !regPassword || !regConfirmPassword) {
-        setError('Iltimos, barcha maydonlarni to\'ldiring');
-        return;
-      }
-
-      if (!regEmail.includes('@')) {
-        setError('Email noto\'g\'ri formatda');
+      if (
+        !regName ||
+        !regPhone ||
+        !regEmail ||
+        !regPassword ||
+        !regConfirmPassword
+      ) {
+        setError("Iltimos, barcha maydonlarni to'ldiring");
         return;
       }
 
       if (regPassword !== regConfirmPassword) {
-        setError('Parollar mos emas');
+        setError("Parollar mos emas");
         return;
       }
 
+      // Ro'yxatdan o'tishda ham tekshiruv (ixtiyoriy, agar faqat shu 2 kishi kira olsa)
       onLogin(regEmail, regPassword, regName, regSubject);
     } else {
       if (!email || !password) {
-        setError('Iltimos, email va parolni kiriting');
+        setError("Iltimos, email va parolni kiriting");
         return;
       }
 
-      if (!email.includes('@')) {
-        setError('Email noto\'g\'ri formatda');
-        return;
-      }
+      // Foydalanuvchini tekshirish
+      const user = allowedUsers.find(
+        (u) => u.email === email && u.password === password,
+      );
 
-      onLogin(email, password);
+      if (user) {
+        onLogin(email, password);
+      } else {
+        setError("Email yoki parol noto'g'ri!");
+      }
     }
   };
 
@@ -67,7 +84,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               <LogIn className="w-8 h-8 text-white" />
             </div>
           </div>
-          
+
           <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
             O'qituvchi paneli
           </h1>
@@ -79,7 +96,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             {isRegistering ? (
               <>
                 <div>
-                  <label htmlFor="regName" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="regName"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Ism
                   </label>
                   <input
@@ -93,7 +113,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 </div>
 
                 <div>
-                  <label htmlFor="regPhone" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="regPhone"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Telefon raqami
                   </label>
                   <input
@@ -107,7 +130,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 </div>
 
                 <div>
-                  <label htmlFor="regEmail" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="regEmail"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Email
                   </label>
                   <input
@@ -121,7 +147,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 </div>
 
                 <div>
-                  <label htmlFor="regSubject" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="regSubject"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Fan nomi
                   </label>
                   <input
@@ -135,7 +164,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 </div>
 
                 <div>
-                  <label htmlFor="regPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="regPassword"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Parol
                   </label>
                   <input
@@ -149,7 +181,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 </div>
 
                 <div>
-                  <label htmlFor="regConfirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="regConfirmPassword"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Parolni takrorlang
                   </label>
                   <input
@@ -165,7 +200,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             ) : (
               <>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Email
                   </label>
                   <input
@@ -179,7 +217,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Parol
                   </label>
                   <input
@@ -205,15 +246,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
             >
               <LogIn className="w-5 h-5" />
-              {isRegistering ? 'Ro\'yxatdan o\'tish' : 'Kirish'}
+              {isRegistering ? "Ro'yxatdan o'tish" : "Kirish"}
             </button>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-600 text-center">
-              Demo kirish: Istalgan email va parol bilan kirishingiz mumkin
-            </p>
-          </div>
+          {/* Demo kirish haqidagi qism olib tashlandi */}
 
           <div className="mt-4 text-center">
             <button
@@ -221,7 +258,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               onClick={() => setIsRegistering(!isRegistering)}
               className="text-sm text-gray-600 hover:text-gray-800"
             >
-              {isRegistering ? 'Kirishga o\'tish' : 'Ro\'yxatdan o\'tishga o\'tish'}
+              {isRegistering ? "Kirishga o'tish" : "Ro'yxatdan o'tishga o'tish"}
             </button>
           </div>
         </div>

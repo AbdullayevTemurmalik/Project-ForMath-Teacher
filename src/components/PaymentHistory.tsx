@@ -1,5 +1,15 @@
-import { useState } from 'react';
-import { DollarSign, Plus, Calendar, TrendingUp, Download } from 'lucide-react';
+import { useState, useEffect } from "react";
+import {
+  DollarSign,
+  Plus,
+  Calendar,
+  TrendingUp,
+  Download,
+  Edit2,
+  Trash2,
+  Save,
+  X,
+} from "lucide-react";
 
 export interface Payment {
   id: string;
@@ -18,303 +28,284 @@ interface PaymentHistoryProps {
     name: string;
     monthlyPayment: number;
   }>;
-  setStudents: (students: any[]) => void;
+  onDeletePaymentRequest: (
+    paymentId: string,
+    confirmCallback: () => void,
+  ) => void;
 }
 
-export function PaymentHistory({ subject, students, setStudents }: PaymentHistoryProps) {
-  const [payments, setPayments] = useState<Payment[]>([
-    { id: '1', studentId: '1', studentName: 'Aliyev Rustam', amount: 300000, date: '2024-01-05', month: '2024-01', note: '' },
-    { id: '2', studentId: '2', studentName: 'Karimova Madina', amount: 300000, date: '2024-01-07', month: '2024-01', note: '' },
-    { id: '3', studentId: '1', studentName: 'Aliyev Rustam', amount: 300000, date: '2024-02-03', month: '2024-02', note: '' },
-    { id: '4', studentId: '3', studentName: 'Saidov Jamshid', amount: 150000, date: '2024-02-10', month: '2024-02', note: 'Qisman to\'lov' },
-  ]);
-
-  const [isAdding, setIsAdding] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState('all');
-  const [selectedStudent, setSelectedStudent] = useState('all');
-  
-  const [formData, setFormData] = useState({
-    studentId: '',
-    amount: 0,
-    date: new Date().toISOString().split('T')[0],
-    note: '',
+export function PaymentHistory({
+  students,
+  onDeletePaymentRequest,
+}: PaymentHistoryProps) {
+  // 1. To'lovlarni LocalStorage'dan o'qish
+  const [payments, setPayments] = useState<Payment[]>(() => {
+    const saved = localStorage.getItem("teacher_payments_data");
+    return saved ? JSON.parse(saved) : []; // Boshida bo'sh bo'ladi, faqat siz qo'shganlar chiqadi
   });
 
-  const handleAddPayment = () => {
-    if (!formData.studentId) {
-      alert("Iltimos, o'quvchini tanlang");
-      return;
-    }
-    if (formData.amount <= 0) {
-      alert("Iltimos, to'lov summasini kiriting");
-      return;
-    }
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState("all");
+  const [selectedStudent, setSelectedStudent] = useState("all");
 
-    const student = students.find(s => s.id === formData.studentId);
+  const [formData, setFormData] = useState({
+    studentId: "",
+    amount: "",
+    date: new Date().toISOString().split("T")[0],
+    note: "",
+  });
+
+  // 2. To'lovlar o'zgarganda LocalStorage'ga yozish
+  useEffect(() => {
+    localStorage.setItem("teacher_payments_data", JSON.stringify(payments));
+  }, [payments]);
+
+  const handleSavePayment = () => {
+    if (!formData.studentId || !formData.amount) return;
+
+    const student = students.find((s) => s.id === formData.studentId);
     if (!student) return;
 
-    const month = formData.date.substring(0, 7); // YYYY-MM format
+    const dateObj = new Date(formData.date);
+    const monthFormatted = `${dateObj.getFullYear()} M${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
 
-    const newPayment: Payment = {
-      id: Date.now().toString(),
-      studentId: formData.studentId,
-      studentName: student.name,
-      amount: formData.amount,
-      date: formData.date,
-      month: month,
-      note: formData.note,
-    };
+    if (editingId) {
+      // Tahrirlash mantiqi
+      setPayments((prev) =>
+        prev.map((p) =>
+          p.id === editingId
+            ? {
+                ...p,
+                studentId: formData.studentId,
+                studentName: student.name,
+                amount: Number(formData.amount),
+                date: formData.date,
+                month: monthFormatted,
+                note: formData.note || "-",
+              }
+            : p,
+        ),
+      );
+    } else {
+      // Yangi qo'shish mantiqi
+      const newPayment: Payment = {
+        id: Date.now().toString(),
+        studentId: formData.studentId,
+        studentName: student.name,
+        amount: Number(formData.amount),
+        date: formData.date,
+        month: monthFormatted,
+        note: formData.note || "-",
+      };
+      setPayments((prev) => [newPayment, ...prev]);
+    }
 
-    setPayments([newPayment, ...payments]);
     resetForm();
-    setIsAdding(false);
+  };
+
+  const startEdit = (p: Payment) => {
+    setFormData({
+      studentId: p.studentId,
+      amount: p.amount.toString(),
+      date: p.date,
+      note: p.note === "-" ? "" : p.note || "",
+    });
+    setEditingId(p.id);
+    setIsAdding(true);
   };
 
   const resetForm = () => {
     setFormData({
-      studentId: '',
-      amount: 0,
-      date: new Date().toISOString().split('T')[0],
-      note: '',
+      studentId: "",
+      amount: "",
+      date: new Date().toISOString().split("T")[0],
+      note: "",
     });
+    setIsAdding(false);
+    setEditingId(null);
   };
 
-  // Filter payments
-  const filteredPayments = payments.filter(payment => {
-    const monthMatch = selectedMonth === 'all' || payment.month === selectedMonth;
-    const studentMatch = selectedStudent === 'all' || payment.studentId === selectedStudent;
+  const filteredPayments = payments.filter((p) => {
+    const monthMatch = selectedMonth === "all" || p.month === selectedMonth;
+    const studentMatch =
+      selectedStudent === "all" || p.studentId === selectedStudent;
     return monthMatch && studentMatch;
   });
 
-  // Calculate statistics
   const totalIncome = filteredPayments.reduce((sum, p) => sum + p.amount, 0);
-  const currentMonth = new Date().toISOString().substring(0, 7);
-  const thisMonthIncome = payments.filter(p => p.month === currentMonth).reduce((sum, p) => sum + p.amount, 0);
-
-  // Get unique months
-  const months = Array.from(new Set(payments.map(p => p.month))).sort().reverse();
+  const months = Array.from(new Set(payments.map((p) => p.month)))
+    .sort()
+    .reverse();
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">To'lov tarixi</h2>
-          <p className="text-gray-600 mt-1">Barcha to'lovlar tarixi va statistika</p>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+            To'lov tarixi
+          </h2>
+          <p className="text-gray-500 text-sm">
+            Barcha kiritilgan to'lovlar ro'yxati
+          </p>
         </div>
-        <button
-          onClick={() => setIsAdding(!isAdding)}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition"
-        >
-          <Plus className="w-5 h-5" />
-          To'lov qo'shish
-        </button>
+        {!isAdding && (
+          <button
+            onClick={() => setIsAdding(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95"
+          >
+            <Plus className="w-5 h-5" /> To'lov qo'shish
+          </button>
+        )}
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm opacity-90">Joriy oy daromad</p>
-            <TrendingUp className="w-6 h-6 opacity-75" />
-          </div>
-          <p className="text-3xl font-bold">{thisMonthIncome.toLocaleString()} so'm</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm opacity-90">Jami to'lovlar</p>
-            <DollarSign className="w-6 h-6 opacity-75" />
-          </div>
-          <p className="text-3xl font-bold">{totalIncome.toLocaleString()} so'm</p>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm opacity-90">To'lovlar soni</p>
-            <Calendar className="w-6 h-6 opacity-75" />
-          </div>
-          <p className="text-3xl font-bold">{filteredPayments.length} ta</p>
-        </div>
-      </div>
-
-      {/* Add Payment Form */}
       {isAdding && (
-        <div className="bg-white border-2 border-blue-200 rounded-lg p-6 shadow-lg">
-          <h3 className="text-lg font-semibold mb-4">To'lov qo'shish</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                O'quvchi *
-              </label>
-              <select
-                value={formData.studentId}
-                onChange={(e) => {
-                  const student = students.find(s => s.id === e.target.value);
-                  setFormData({
-                    ...formData,
-                    studentId: e.target.value,
-                    amount: student?.monthlyPayment || 0
-                  });
-                }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              >
-                <option value="">O'quvchini tanlang</option>
-                {students.map(student => (
-                  <option key={student.id} value={student.id}>
-                    {student.name} ({student.monthlyPayment.toLocaleString()} so'm)
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                To'lov summasi (so'm) *
-              </label>
-              <input
-                type="number"
-                value={formData.amount || ''}
-                onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                placeholder="300000"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sana *
-              </label>
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Izoh (ixtiyoriy)
-              </label>
-              <input
-                type="text"
-                value={formData.note}
-                onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                placeholder="Qo'shimcha ma'lumot..."
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3 mt-6">
-            <button
-              onClick={handleAddPayment}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition"
-            >
-              Qo'shish
-            </button>
-            <button
-              onClick={() => {
-                setIsAdding(false);
-                resetForm();
+        <div className="bg-white border-2 border-blue-50 p-6 rounded-2xl shadow-sm space-y-4 animate-in zoom-in duration-200">
+          <h3 className="font-bold text-gray-800 flex items-center gap-2">
+            {editingId ? (
+              <Edit2 className="w-4 h-4 text-blue-600" />
+            ) : (
+              <Plus className="w-4 h-4 text-blue-600" />
+            )}
+            {editingId ? "To'lovni tahrirlash" : "Yangi to'lov qo'shish"}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <select
+              value={formData.studentId}
+              onChange={(e) => {
+                const s = students.find((st) => st.id === e.target.value);
+                setFormData({
+                  ...formData,
+                  studentId: e.target.value,
+                  amount: s?.monthlyPayment.toString() || "",
+                });
               }}
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition"
+              className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+            >
+              <option value="">O'quvchini tanlang</option>
+              {students.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              placeholder="Summa"
+              value={formData.amount}
+              onChange={(e) =>
+                setFormData({ ...formData, amount: e.target.value })
+              }
+              className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+            />
+            <input
+              type="date"
+              value={formData.date}
+              onChange={(e) =>
+                setFormData({ ...formData, date: e.target.value })
+              }
+              className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+            />
+            <input
+              type="text"
+              placeholder="Izoh"
+              value={formData.note}
+              onChange={(e) =>
+                setFormData({ ...formData, note: e.target.value })
+              }
+              className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              onClick={resetForm}
+              className="px-5 py-2 text-gray-500 hover:bg-gray-100 rounded-xl font-semibold"
             >
               Bekor qilish
+            </button>
+            <button
+              onClick={handleSavePayment}
+              className="px-8 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" /> Saqlash
             </button>
           </div>
         </div>
       )}
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg p-4 shadow">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Oy bo'yicha</label>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            >
-              <option value="all">Barcha oylar</option>
-              {months.map(month => (
-                <option key={month} value={month}>
-                  {new Date(month + '-01').toLocaleDateString('uz-UZ', { year: 'numeric', month: 'long' })}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">O'quvchi bo'yicha</label>
-            <select
-              value={selectedStudent}
-              onChange={(e) => setSelectedStudent(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            >
-              <option value="all">Barcha o'quvchilar</option>
-              {students.map(student => (
-                <option key={student.id} value={student.id}>{student.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <button
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition"
-            >
-              <Download className="w-4 h-4" />
-              Excel yuklash
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Payments Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Rasmga mos To'lovlar Jadvali */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">№</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">O'quvchi</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Summa</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sana</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Oy</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Izoh</th>
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50/50 border-b border-gray-100">
+              <tr className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                <th className="px-6 py-4">№</th>
+                <th className="px-6 py-4">O'quvchi</th>
+                <th className="px-6 py-4">Summa</th>
+                <th className="px-6 py-4">Sana</th>
+                <th className="px-6 py-4">Oy</th>
+                <th className="px-6 py-4">Izoh</th>
+                <th className="px-6 py-4 text-right">Amallar</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredPayments.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    To'lovlar topilmadi
+            <tbody className="divide-y divide-gray-50">
+              {filteredPayments.map((p, i) => (
+                <tr
+                  key={p.id}
+                  className="group hover:bg-blue-50/30 transition-all duration-200"
+                >
+                  <td className="px-6 py-4 text-xs text-gray-400 font-medium">
+                    {i + 1}
+                  </td>
+                  <td className="px-6 py-4 text-sm font-bold text-gray-800">
+                    {p.studentName}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <span className="text-[#10b981] font-bold">
+                      {p.amount.toLocaleString()} so'm
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-xs text-gray-500 font-medium">
+                    {p.date}
+                  </td>
+                  <td className="px-6 py-4 text-xs text-gray-500 font-semibold uppercase">
+                    {p.month}
+                  </td>
+                  <td className="px-6 py-4 text-xs text-gray-400 italic">
+                    {p.note || "-"}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                      <button
+                        onClick={() => startEdit(p)}
+                        className="p-1.5 text-blue-500 hover:bg-blue-100 rounded-lg transition-colors"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          onDeletePaymentRequest(p.id, () => {
+                            setPayments((prev) =>
+                              prev.filter((item) => item.id !== p.id),
+                            );
+                          })
+                        }
+                        className="p-1.5 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              ) : (
-                filteredPayments.map((payment, index) => (
-                  <tr key={payment.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{payment.studentName}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      <span className="font-semibold text-green-600">
-                        {payment.amount.toLocaleString()} so'm
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(payment.date).toLocaleDateString('uz-UZ')}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(payment.month + '-01').toLocaleDateString('uz-UZ', { year: 'numeric', month: 'long' })}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{payment.note || '-'}</td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
         </div>
+        {filteredPayments.length === 0 && (
+          <div className="py-20 text-center text-gray-400 font-medium">
+            Hali hech qanday to'lov qo'shilmagan
+          </div>
+        )}
       </div>
     </div>
   );
