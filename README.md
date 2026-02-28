@@ -1,1 +1,1 @@
-Sizlar oz oquvchilaringiz ni 
+Sizlar oz oquvchilaringiz ni qoshib ularni 
