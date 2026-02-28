@@ -1,1 +1,1 @@
-Sizlar oz oquvchilaringiz ni qoshib ularni kelgan kelmaganini bilgilashingiz va ular tolovlarni oz vaqtida qilgan qilmaganlarini ozigiz belgilashingiz tekshirishingiz 
+Sizlar oz oquvchilaringiz ni qoshib ularni kelgan kelmaganini bilgilashingiz va ular tolovlarni oz vaqtida qilgan qilmaganlarini ozigiz belgilashingiz tekshirishingiz mumkun
