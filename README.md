@@ -1,1 +1,1 @@
-Bu Fayl Code lari bilan Sizlar Oz oquvchilaringizni royhatilarini belgilab ishlatishingiz mumkun !!!
+Sizlar oz oquvchilaringiz ni 
