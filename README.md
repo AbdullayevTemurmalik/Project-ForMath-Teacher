@@ -1,1 +1,1 @@
-Sizlar oz oquvchilaringiz ni qoshib ularni 
+Sizlar oz oquvchilaringiz ni qoshib ularni kelgan kelmaganini 
